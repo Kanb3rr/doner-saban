@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Şaban Döner</title>
+<meta name="description" content="Ocağın önünde dönen, bıçakla tıraşlanabilen 3D et döner.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4DDD3; --ink:#2A1E17; --muted:#6B5A4E; --rule:#BFB2A4;
+  --marker:#E8742A; --marker-ink:#1E140E;
+  --stage-a:#D9CFC3; --stage-b:#9C8E80;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1512; --ink:#EDE4DA; --muted:#A8978A; --rule:#3E332B;
+    --marker:#E8742A; --marker-ink:#1E140E;
+    --stage-a:#44372E; --stage-b:#1D1713;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1512; --ink:#EDE4DA; --muted:#A8978A; --rule:#3E332B;
+  --marker:#E8742A; --marker-ink:#1E140E;
+  --stage-a:#44372E; --stage-b:#1D1713;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+  font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1320px; margin:0 auto; padding:28px clamp(16px,3vw,40px) 48px}
+.intro{display:grid; grid-template-columns:1fr auto; gap:8px 32px; align-items:end; margin-bottom:22px}
+h1{margin:0; font-weight:850; font-variation-settings:"wdth" 125; font-size:clamp(2.9rem,8.6vw,7.4rem); line-height:.86; letter-spacing:-.025em}
+.lede{margin:0; max-width:34ch; color:var(--muted); font-size:1.05rem; line-height:1.45; padding-bottom:.35em}
+.bench{display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:18px; align-items:stretch}
+.stage{position:relative; border-radius:6px; overflow:hidden;
+  background:radial-gradient(ellipse 80% 70% at 50% 38%, var(--stage-a), var(--stage-b));
+  height:min(78vh,740px); min-height:440px}
+.stage canvas{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:grab}
+.stage.over canvas{cursor:crosshair}
+.stage.orbiting canvas{cursor:grabbing}
+.hint{position:absolute; left:16px; top:14px; margin:0; max-width:36ch; font-size:.86rem; line-height:1.35; opacity:.8; pointer-events:none}
+.spec{position:absolute; right:16px; top:12px; margin:0; pointer-events:none; font-variation-settings:"wdth" 62; font-weight:650; font-size:1.02rem; letter-spacing:.05em; opacity:.6; white-space:nowrap}
+.stats{position:absolute; left:0; right:0; bottom:0; margin:0; padding:10px 16px 12px; display:flex; flex-wrap:wrap; gap:6px 28px; pointer-events:none}
+.stats div{display:flex; gap:8px; align-items:baseline}
+.stats dt{font-size:.8rem; opacity:.65}
+.stats dd{margin:0; font-weight:700; font-variant-numeric:tabular-nums; font-size:.98rem}
+.loading{position:absolute; inset:0; display:grid; place-items:center; margin:0; opacity:.7; pointer-events:none}
+.panel{display:flex; flex-direction:column}
+fieldset{border:0; margin:0; padding:14px 0 16px; border-top:1.5px solid var(--rule)}
+fieldset:first-child{border-top:0; padding-top:2px}
+legend{float:left; width:100%; padding:0; margin:0 0 9px; font-variation-settings:"wdth" 75; font-weight:700; font-size:.92rem}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:6px; clear:both}
+button{font:inherit; font-size:.9rem; color:var(--ink); background:transparent; border:1.5px solid var(--ink); border-radius:3px; padding:7px 10px; cursor:pointer; text-align:left; transition:background-color .12s,color .12s}
+button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+.types button[aria-pressed="true"]{background:var(--marker); color:var(--marker-ink); border-color:var(--marker-ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--marker); outline-offset:2px}
+.slider{clear:both}
+.slider + .slider{margin-top:14px}
+.slider label{display:flex; justify-content:space-between; font-size:.9rem; margin-bottom:4px}
+.slider output{font-weight:700; font-variant-numeric:tabular-nums}
+.ends{display:flex; justify-content:space-between; font-size:.76rem; color:var(--muted); margin-top:2px}
+input[type=range]{width:100%; accent-color:var(--marker); margin:0}
+.notes{margin-top:56px; max-width:1040px}
+.notes h2{margin:0 0 18px; font-variation-settings:"wdth" 115; font-weight:800; font-size:clamp(1.6rem,3.2vw,2.3rem); letter-spacing:-.015em; line-height:1.05}
+.cols{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 48px}
+.cols h3{margin:0 0 4px; font-size:1.02rem; font-weight:750}
+.cols p{margin:0; color:var(--muted); max-width:62ch}
+footer{margin-top:48px; padding-top:14px; border-top:1.5px solid var(--rule); font-size:.86rem; color:var(--muted)}
+@media (max-width:900px){
+  .bench{grid-template-columns:1fr}
+  .stage{height:66vh; min-height:380px}
+  .intro{grid-template-columns:1fr}
+  .panel{display:grid; grid-template-columns:1fr 1fr; gap:0 20px}
+  fieldset:first-child{padding-top:14px; border-top:1.5px solid var(--rule)}
+}
+@media (max-width:560px){
+  .panel{grid-template-columns:1fr}
+  .cols{grid-template-columns:1fr}
+  .spec{font-size:.86rem; top:62px; left:16px; right:auto}
+  .stats{gap:6px 20px}
+}
+@media (prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="intro">
+    <h1>Şaban döner</h1>
+    <p class="lede">Ocağın önünde dönen bir şiş. Bıçağı etin üstünde gezdir, dilimler tepsiye dökülsün.</p>
+  </section>
+
+  <section class="bench">
+    <div class="stage" id="stage">
+      <canvas id="gl" aria-label="3D döner, keserek veya sürükleyerek etkileşime geçin"></canvas>
+      <p class="hint">Etin üstüne basılı tutup bıçağı gezdir. Boşlukta sürüklersen kamera döner.</p>
+      <p class="spec" id="spec"></p>
+      <dl class="stats">
+        <div><dt>Kesilen</dt><dd id="sKes">0 g</dd></div>
+        <div><dt>Porsiyon</dt><dd id="sPor">0</dd></div>
+        <div><dt>Dönüş</dt><dd id="sRpm">2 dev/dk</dd></div>
+        <div><dt>Pişmişlik</dt><dd id="sPis">0%</dd></div>
+      </dl>
+      <p class="loading" id="loading">Şiş takılıyor…</p>
+    </div>
+
+    <aside class="panel" aria-label="Kontroller">
+      <fieldset>
+        <legend>Tür</legend>
+        <div class="seg types" id="types"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Ocak</legend>
+        <div class="slider">
+          <label for="rpm">Dönüş hızı <output id="rpmOut">2.0</output></label>
+          <input id="rpm" type="range" min="0" max="8" step="0.1" value="2">
+          <div class="ends"><span>dur</span><span>fırıl fırıl</span></div>
+        </div>
+        <div class="slider">
+          <label for="heat">Ateş <output id="heatOut">0.60</output></label>
+          <input id="heat" type="range" min="0" max="1" step="0.01" value="0.6">
+          <div class="ends"><span>kısık</span><span>harlı</span></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Tezgâh</legend>
+        <div class="seg">
+          <button type="button" id="clear">Tepsiyi boşalt</button>
+          <button type="button" id="reset">Yeni şiş</button>
+          <button type="button" id="sound" aria-pressed="true">Ses</button>
+        </div>
+      </fieldset>
+    </aside>
+  </section>
+
+  <section class="notes">
+    <h2>Nasıl çalışıyor</h2>
+    <div class="cols">
+      <article><h3>Şiş</h3><p>Etin yüzeyi 96 kat × 112 dilimlik bir ızgara. Her hücre ne kadar tıraşlandığını ve ne kadar piştiğini ayrı ayrı tutar.</p></article>
+      <article><h3>Ocak</h3><p>Yalnızca ocağa bakan taraf pişer. Dönüş hızı arttıkça et daha eşit kızarır, ateşi harlarsan kenarlar yanmaya başlar.</p></article>
+      <article><h3>Bıçak</h3><p>Kestiğin yerde kızarmış kabuk gider, altındaki açık renkli et ve katmanlar çıkar. O yüz ocağa döndükçe yeniden kızarır.</p></article>
+      <article><h3>Tepsi</h3><p>Her dilim kesildiği hücrenin rengini alır ve tepsiye düşer. Kabaca 100 gram bir porsiyon sayılıyor.</p></article>
+    </div>
+  </section>
+
+  <footer>made by ock</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const TAU=Math.PI*2, $=s=>document.querySelector(s);
+const stage=$('#stage'), canvas=$('#gl');
+
+/* ---------- Meat field ---------- */
+const NH=96, NT=112, Y0=0.66, HH=2.2, SKR=0.035, MINR=SKR+0.06;
+const R0=new Float32Array(NH*NT), D=new Float32Array(NH*NT), COOK=new Float32Array(NH*NT), NZ=new Float32Array(NH*NT), FAT=new Float32Array(NH*NT);
+function hash(x,y){const s=Math.sin(x*127.1+y*311.7)*43758.5453; return s-Math.floor(s);}
+function vnoise(x,y,per){
+  const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi;
+  const u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf), w=k=>((k%per)+per)%per;
+  const a=hash(w(xi),yi), b=hash(w(xi+1),yi), c=hash(w(xi),yi+1), d=hash(w(xi+1),yi+1);
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;
+}
+function profile(t){
+  let r=0.29+0.33*Math.pow(t,0.85);
+  r*=1-Math.pow(Math.max(0,(t-0.88)/0.12),2)*0.28;
+  r*=1-Math.pow(Math.max(0,(0.07-t)/0.07),2)*0.4;
+  return r;
+}
+function initField(){
+  for(let i=0;i<NH;i++){
+    const t=i/(NH-1);
+    for(let j=0;j<NT;j++){
+      const c=i*NT+j, a=j/NT;
+      const n1=vnoise(a*7, t*12, 7), n2=vnoise(a*19, t*34, 19), n3=vnoise(a*41,t*70,41);
+      NZ[c]=n2*0.6+n3*0.4;
+      FAT[c]=vnoise(a*23+3, t*9+5, 23);
+      R0[c]=profile(t)*(1+0.06*(n1-0.5)+0.028*(n2-0.5)+0.012*(n3-0.5));
+      D[c]=0; COOK[c]=0.7+0.2*n1;
+    }
+  }
+}
+
+/* ---------- Renderer ---------- */
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setClearColor(0,0);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(32,1,0.1,100);
+
+(function env(){
+  const s=new THREE.Scene(), g=new THREE.SphereGeometry(20,40,20), col=[], p=g.attributes.position;
+  for(let i=0;i<p.count;i++){const y=p.getY(i)/20, v=y>0?0.2+0.3*y:0.08+0.1*(1+y); col.push(v*1.05,v,v*0.92);}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  s.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({side:THREE.BackSide,vertexColors:true})));
+  const panel=(w,h,x,y,z,r,gg,b)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(r,gg,b),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0.001);s.add(m);};
+  panel(14,5,0.3,13,0.5,4,4,4); panel(3,14,11,4,6,5,5,5); panel(4,10,0,3,-12,5,2.2,0.8);
+  const pm=new THREE.PMREMGenerator(renderer); scene.environment=pm.fromScene(s,0.02).texture; pm.dispose();
+})();
+
+scene.add(new THREE.HemisphereLight(0xfff4e8,0x4a3a30,0.35));
+const key=new THREE.DirectionalLight(0xfff2e2,1.0);
+key.position.set(3,7,4); key.castShadow=true; key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:1,far:20});
+key.shadow.bias=-0.0006; key.shadow.normalBias=0.02; key.shadow.radius=4;
+scene.add(key);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({opacity:0.3}));
+floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+
+/* ---------- Rig: skewer, tray, heater ---------- */
+const steel=new THREE.MeshStandardMaterial({color:0xb9bcbf,metalness:1,roughness:0.28});
+const darkSteel=new THREE.MeshStandardMaterial({color:0x2c2a28,metalness:0.8,roughness:0.5});
+const TRAY_Y=0.3, TRAY_R=0.86;
+{
+  const sk=new THREE.Mesh(new THREE.CylinderGeometry(SKR,SKR,3.2,16),steel); sk.position.y=1.75; sk.castShadow=true; scene.add(sk);
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(SKR,0.1,16),steel); tip.position.y=3.4; scene.add(tip);
+  const tp=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.22,0.03,40),steel); tp.position.y=Y0+HH+0.02; tp.castShadow=true; scene.add(tp);
+  const bp=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.03,40),steel); bp.position.y=Y0-0.02; bp.castShadow=true; scene.add(bp);
+  const lp=[[0,0],[TRAY_R,0],[TRAY_R+0.04,0.06],[TRAY_R+0.05,0.075],[TRAY_R+0.035,0.075],[TRAY_R-0.005,0.012],[0,0.012]].map(p=>new THREE.Vector2(p[0],p[1]));
+  const tray=new THREE.Mesh(new THREE.LatheGeometry(lp,64),steel); tray.position.y=TRAY_Y; tray.castShadow=true; tray.receiveShadow=true; scene.add(tray);
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.3,TRAY_Y,32),darkSteel); ped.position.y=TRAY_Y/2; ped.castShadow=true; scene.add(ped);
+}
+const heater=new THREE.Group(); heater.position.set(0,1.75,-1.35); scene.add(heater);
+const bars=[];
+{
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(1.7,2.8,0.16),darkSteel); frame.position.z=-0.06; frame.castShadow=true; heater.add(frame);
+  const back=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2.6),new THREE.MeshStandardMaterial({color:0x1a1210,roughness:0.9})); back.position.z=0.025; heater.add(back);
+  for(let k=0;k<5;k++){
+    const m=new THREE.MeshStandardMaterial({color:0x3a160a,emissive:0xff4210,emissiveIntensity:1,roughness:0.6});
+    const b=new THREE.Mesh(new THREE.BoxGeometry(0.11,2.4,0.04),m); b.position.set(-0.56+k*0.28,0,0.05); heater.add(b); bars.push(m);
+  }
+}
+const fire=new THREE.PointLight(0xff7a2a,2,5,1.6); fire.position.set(0,1.75,-0.9); scene.add(fire);
+
+/* ---------- Meat mesh ---------- */
+const meat=new THREE.Group(); scene.add(meat);
+const NC=NT+1, NVS=NH*NC;
+const sGeo=new THREE.BufferGeometry();
+const sPos=new Float32Array(NVS*3), sNor=new Float32Array(NVS*3), sCol=new Float32Array(NVS*3);
+sGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3).setUsage(THREE.DynamicDrawUsage));
+sGeo.setAttribute('normal',new THREE.BufferAttribute(sNor,3).setUsage(THREE.DynamicDrawUsage));
+sGeo.setAttribute('color',new THREE.BufferAttribute(sCol,3).setUsage(THREE.DynamicDrawUsage));
+{
+  const idx=[];
+  for(let i=0;i<NH-1;i++)for(let j=0;j<NT;j++){const a=i*NC+j,b=a+1,c=a+NC,d=c+1; idx.push(a,c,b,b,c,d);}
+  sGeo.setIndex(idx);
+}
+sGeo.boundingSphere=new THREE.Sphere(new THREE.Vector3(0,Y0+HH/2,0),1.6);
+const meatMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.55,metalness:0,side:THREE.DoubleSide,envMapIntensity:0.6});
+const side=new THREE.Mesh(sGeo,meatMat); side.castShadow=true; side.receiveShadow=true; meat.add(side);
+const cGeo=new THREE.BufferGeometry(), cPos=new Float32Array((NC+1)*3), cNor=new Float32Array((NC+1)*3), cCol=new Float32Array((NC+1)*3);
+cGeo.setAttribute('position',new THREE.BufferAttribute(cPos,3)); cGeo.setAttribute('normal',new THREE.BufferAttribute(cNor,3)); cGeo.setAttribute('color',new THREE.BufferAttribute(cCol,3));
+{const idx=[]; for(let j=0;j<NT;j++) idx.push(NC,j+1,j); cGeo.setIndex(idx); for(let k=0;k<=NC;k++) cNor[k*3+1]=1;}
+const cap=new THREE.Mesh(cGeo,meatMat); cap.castShadow=true; meat.add(cap);
+
+const COS=new Float32Array(NC), SIN=new Float32Array(NC);
+for(let j=0;j<NC;j++){COS[j]=Math.cos(j/NT*TAU); SIN[j]=Math.sin(j/NT*TAU);}
+
+function updateShape(){
+  for(let i=0;i<NH;i++){
+    const y=Y0+i/(NH-1)*HH;
+    for(let j=0;j<NC;j++){
+      const c=i*NT+(j%NT), r=Math.max(MINR,R0[c]-D[c]), o=(i*NC+j)*3;
+      sPos[o]=r*COS[j]; sPos[o+1]=y; sPos[o+2]=r*SIN[j];
+    }
+  }
+  for(let i=0;i<NH;i++){
+    const i0=Math.max(0,i-1), i1=Math.min(NH-1,i+1);
+    for(let j=0;j<NC;j++){
+      const jm=(j+NT-1)%NT, jp=(j+1)%NT;
+      const A=(i*NC+jp)*3, B=(i*NC+jm)*3, U=(i1*NC+j)*3, L=(i0*NC+j)*3;
+      const tx=sPos[A]-sPos[B], ty=sPos[A+1]-sPos[B+1], tz=sPos[A+2]-sPos[B+2];
+      const hx=sPos[U]-sPos[L], hy=sPos[U+1]-sPos[L+1], hz=sPos[U+2]-sPos[L+2];
+      let nx=hy*tz-hz*ty, ny=hz*tx-hx*tz, nz=hx*ty-hy*tx; const l=Math.hypot(nx,ny,nz)||1;
+      const o=(i*NC+j)*3; sNor[o]=nx/l; sNor[o+1]=ny/l; sNor[o+2]=nz/l;
+    }
+  }
+  sGeo.attributes.position.needsUpdate=true; sGeo.attributes.normal.needsUpdate=true;
+  const top=(NH-1)*NC*3;
+  for(let j=0;j<NC;j++){const o=j*3; cPos[o]=sPos[top+o]*0.995; cPos[o+1]=sPos[top+o+1]; cPos[o+2]=sPos[top+o+2]*0.995;}
+  cPos[NC*3]=0; cPos[NC*3+1]=Y0+HH; cPos[NC*3+2]=0;
+  cGeo.attributes.position.needsUpdate=true;
+}
+
+const lin=v=>Math.pow(v/255,2.2);
+const TYPES={
+  et:{label:'Et döner', raw:[176,104,88], mid:[132,72,38], char:[52,26,12], fat:[214,186,160]},
+  tavuk:{label:'Tavuk döner', raw:[228,198,154], mid:[204,138,60], char:[104,58,20], fat:[240,222,190]}
+};
+let typeKey='et', PAL=null;
+function setPalette(){const t=TYPES[typeKey]; PAL={raw:t.raw.map(lin),mid:t.mid.map(lin),char:t.char.map(lin),fat:t.fat.map(lin)};}
+function cellColor(c,i,out,o){
+  const k=COOK[c], t=i/(NH-1), n=NZ[c];
+  const P=PAL; let a,b,f;
+  if(k<0.72){a=P.raw;b=P.mid;f=k/0.72;} else {a=P.mid;b=P.char;f=Math.min(1,(k-0.72)/0.28)*0.85;}
+  const fresh=Math.max(0,1-k*1.5);
+  const stripe=1-0.22*fresh*(0.5+0.5*Math.sin(t*HH*120+n*5));
+  const g=(0.8+0.36*n)*stripe;
+  const fat=Math.max(0,(FAT[c]-0.8)*3)*(0.35+0.65*fresh);
+  for(let d=0;d<3;d++){const base=(a[d]+(b[d]-a[d])*f)*g; out[o+d]=base+(P.fat[d]-base)*Math.min(0.7,fat);}
+}
+function updateColors(){
+  for(let i=0;i<NH;i++)for(let j=0;j<NC;j++) cellColor(i*NT+(j%NT),i,sCol,(i*NC+j)*3);
+  sGeo.attributes.color.needsUpdate=true;
+  const top=(NH-1)*NC*3;
+  for(let j=0;j<NC;j++){const o=j*3; cCol[o]=sCol[top+o]*0.8; cCol[o+1]=sCol[top+o+1]*0.8; cCol[o+2]=sCol[top+o+2]*0.8;}
+  cCol[NC*3]=cCol[0]*0.9; cCol[NC*3+1]=cCol[1]*0.9; cCol[NC*3+2]=cCol[2]*0.9;
+  cGeo.attributes.color.needsUpdate=true;
+}
+
+/* ---------- Shavings ---------- */
+const MAXS=360;
+const shGeo=new THREE.PlaneGeometry(0.22,0.13,8,1);
+{const p=shGeo.attributes.position; for(let i=0;i<p.count;i++){const x=p.getX(i); p.setZ(i,-x*x*3.2+0.01*Math.sin(p.getY(i)*40));} shGeo.computeVertexNormals();}
+const shMat=new THREE.MeshStandardMaterial({roughness:0.65,metalness:0,side:THREE.DoubleSide,envMapIntensity:1.2});
+const shav=new THREE.InstancedMesh(shGeo,shMat,MAXS);
+shav.castShadow=true; shav.receiveShadow=false; shav.count=0; shav.frustumCulled=false;
+const tmpC=new THREE.Color(); for(let k=0;k<MAXS;k++) shav.setColorAt(k,tmpC.setRGB(0.4,0.2,0.1));
+scene.add(shav);
+const S=[]; let sHead=0, landed=0;
+const dummy=new THREE.Object3D();
+function spawnShaving(p,nrm,col){
+  const k=sHead%MAXS; sHead++; shav.count=Math.min(MAXS,sHead);
+  const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*TAU,Math.random()*TAU,Math.random()*TAU));
+  const w=new THREE.Vector3((Math.random()-0.5)*9,(Math.random()-0.5)*9,(Math.random()-0.5)*9);
+  const v=new THREE.Vector3(nrm.x*0.35+(Math.random()-0.5)*0.25,-0.2+Math.random()*0.4,nrm.z*0.35+(Math.random()-0.5)*0.25);
+  const sc=0.75+Math.random()*0.55;
+  S[k]={p:p.clone().addScaledVector(nrm,0.03),v,q,w,sc,rest:false};
+  const m=PAL.mid, jit=1.25+Math.random()*0.4; shav.setColorAt(k,tmpC.setRGB((col[0]*0.45+m[0]*0.75)*jit,(col[1]*0.45+m[1]*0.75)*jit,(col[2]*0.45+m[2]*0.75)*jit));
+  shav.instanceColor.needsUpdate=true;
+}
+const dq=new THREE.Quaternion(), ax=new THREE.Vector3();
+function stepShavings(dt){
+  for(let k=0;k<shav.count;k++){
+    const s=S[k]; if(!s) continue;
+    if(!s.rest){
+      s.v.y-=12*dt; s.v.multiplyScalar(1-0.8*dt);
+      s.p.addScaledVector(s.v,dt);
+      const wl=s.w.length(); if(wl>0){ax.copy(s.w).divideScalar(wl); dq.setFromAxisAngle(ax,wl*dt); s.q.premultiply(dq);}
+      const r=Math.hypot(s.p.x,s.p.z);
+      if(s.p.y>Y0&&s.p.y<Y0+HH){const rm=profile((s.p.y-Y0)/HH)*0.9; if(r<rm){s.p.x*=rm/r; s.p.z*=rm/r;}}
+      let fl=0.012;
+      if(r<TRAY_R-0.02) fl=TRAY_Y+0.025+Math.min(0.22,landed*0.0009)*(1-r/TRAY_R)+Math.random()*0.02;
+      else if(r<TRAY_R+0.06 && s.p.y>TRAY_Y) {s.v.x-=s.p.x*dt*8; s.v.z-=s.p.z*dt*8;}
+      if(s.p.y<=fl){
+        s.p.y=fl; s.rest=true; landed++;
+        const e=new THREE.Euler().setFromQuaternion(s.q); e.x=-Math.PI/2+(Math.random()-0.5)*0.9; e.z=(Math.random()-0.5)*0.6;
+        s.q.setFromEuler(e);
+      }
+    }
+    dummy.position.copy(s.p); dummy.quaternion.copy(s.q); dummy.scale.setScalar(s.sc); dummy.updateMatrix();
+    shav.setMatrixAt(k,dummy.matrix);
+  }
+  shav.instanceMatrix.needsUpdate=true;
+}
+function clearTray(){S.length=0; sHead=0; landed=0; shav.count=0;}
+
+/* ---------- Knife ---------- */
+const knife=new THREE.Group(); knife.visible=false; scene.add(knife);
+{
+  const bladeShape=new THREE.Shape();
+  bladeShape.moveTo(0,0); bladeShape.lineTo(0.95,0.0); bladeShape.quadraticCurveTo(1.12,0.04,1.18,0.13); bladeShape.lineTo(0,0.13); bladeShape.lineTo(0,0);
+  const bg=new THREE.ExtrudeGeometry(bladeShape,{depth:0.008,bevelEnabled:false}); bg.translate(0,-0.065,-0.004);
+  const blade=new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0xd8dadc,metalness:1,roughness:0.18})); blade.castShadow=true; knife.add(blade);
+  const handle=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.08,0.05),new THREE.MeshStandardMaterial({color:0x1b1410,roughness:0.5})); handle.position.x=-0.22; handle.castShadow=true; knife.add(handle);
+  const guard=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.15,0.07),steel); knife.add(guard);
+}
+const kBasis=new THREE.Matrix4(), vUp=new THREE.Vector3(0,1,0);
+function placeKnife(point,nrm){
+  const n=nrm.clone().normalize();
+  const along=new THREE.Vector3().crossVectors(vUp,n);
+  if(along.lengthSq()<1e-6) along.set(1,0,0);
+  along.normalize();
+  const width=new THREE.Vector3().crossVectors(n,along).normalize();
+  kBasis.makeBasis(along,width,n);
+  knife.quaternion.setFromRotationMatrix(kBasis);
+  knife.position.copy(point).addScaledVector(n,0.012).addScaledVector(along,-0.55);
+  knife.visible=true;
+}
+
+/* ---------- State ---------- */
+let rot=0, rpm=2, heat=0.6, removed=0, spawnAcc=0, soundOn=true, shapeDirty=true, colorTick=0, initVol=0;
+const CELL_A=TAU/NT, CELL_H=HH/NH, G_PER_VOL=16400;
+function volume(){let v=0; for(let c=0;c<NH*NT;c++){const r=Math.max(MINR,R0[c]-D[c]); v+=0.5*(r*r-SKR*SKR)*CELL_A*CELL_H;} return v;}
+function reset(){initField(); removed=0; spawnAcc=0; rot=0; clearTray(); shapeDirty=true; updateShape(); updateColors(); initVol=volume();}
+
+/* ---------- Camera ---------- */
+const orbit={theta:0.42,phi:1.22,r:7.4,target:new THREE.Vector3(0,1.55,0)};
+function placeCamera(){const {theta,phi,r,target}=orbit; camera.position.set(target.x+r*Math.sin(phi)*Math.sin(theta),target.y+r*Math.cos(phi),target.z+r*Math.sin(phi)*Math.cos(theta)); camera.lookAt(target);}
+let SW=1,SH=1;
+function resize(){const r=stage.getBoundingClientRect(); SW=r.width; SH=r.height; renderer.setSize(SW,SH,false); camera.aspect=SW/SH; camera.fov=SW<560?44:32; camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage);
+
+/* ---------- Audio ---------- */
+let actx=null, sizzle=null;
+function ensureAudio(){
+  if(!soundOn) return;
+  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+    const len=2*actx.sampleRate, buf=actx.createBuffer(1,len,actx.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++){d[i]=(Math.random()*2-1)*(Math.random()<0.02?1:0.35);}
+    const src=actx.createBufferSource(); src.buffer=buf; src.loop=true;
+    const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2200;
+    const g=actx.createGain(); g.gain.value=0; src.connect(hp); hp.connect(g); g.connect(actx.destination); src.start();
+    sizzle=g;
+  }
+  if(actx.state==='suspended') actx.resume();
+}
+function setSizzle(level){if(sizzle&&actx) sizzle.gain.setTargetAtTime(soundOn?level:0,actx.currentTime,0.06);}
+
+/* ---------- Input ---------- */
+const ray=new THREE.Raycaster(), loc=new THREE.Vector3();
+function ndc(x,y){return new THREE.Vector2(x/SW*2-1,-(y/SH)*2+1);}
+function hitMeat(x,y){
+  ray.setFromCamera(ndc(x,y),camera);
+  const h=ray.intersectObject(side,false)[0]; if(!h) return null;
+  const n=h.face.normal.clone().transformDirection(side.matrixWorld);
+  if(n.dot(ray.ray.direction)>0) n.negate();
+  return {point:h.point.clone(), normal:n};
+}
+const pts=new Map(); let mode=null, lastX=0,lastY=0, pinch=null, pointer=null, cutting=false;
+function local(e){const r=canvas.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top];}
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId); const [x,y]=local(e); pts.set(e.pointerId,[x,y]); ensureAudio();
+  if(pts.size===2){cutting=false; const [a,b]=[...pts.values()]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),c:[(a[0]+b[0])/2,(a[1]+b[1])/2]}; mode='pinch'; return;}
+  if(pts.size>2) return;
+  lastX=x; lastY=y; pointer=[x,y];
+  if(e.button===0 && hitMeat(x,y)){mode='cut'; cutting=true;} else {mode='orbit'; stage.classList.add('orbiting');}
+});
+canvas.addEventListener('pointermove',e=>{
+  const [x,y]=local(e); pointer=[x,y];
+  if(!pts.has(e.pointerId)) return;
+  pts.set(e.pointerId,[x,y]);
+  if(mode==='pinch'&&pts.size===2){
+    const [a,b]=[...pts.values()], d=Math.hypot(a[0]-b[0],a[1]-b[1]), c=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    orbit.r=Math.min(13,Math.max(3.5,orbit.r*pinch.d/Math.max(1,d)));
+    orbit.theta-=(c[0]-pinch.c[0])*0.006; orbit.phi=Math.min(1.5,Math.max(0.25,orbit.phi-(c[1]-pinch.c[1])*0.005));
+    pinch={d,c}; return;
+  }
+  if(mode==='orbit'){orbit.theta-=(x-lastX)*0.006; orbit.phi=Math.min(1.5,Math.max(0.25,orbit.phi-(y-lastY)*0.005));}
+  lastX=x; lastY=y;
+});
+function up(e){
+  if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
+  if(pts.size===0){mode=null; cutting=false; stage.classList.remove('orbiting'); if(e.pointerType!=='mouse') pointer=null;}
+  else if(mode==='pinch') mode='orbit';
+  if(pts.size===1){const [p]=[...pts.values()]; lastX=p[0]; lastY=p[1];}
+}
+canvas.addEventListener('pointerup',up); canvas.addEventListener('pointercancel',up);
+canvas.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!pts.size) pointer=null;});
+canvas.addEventListener('wheel',e=>{e.preventDefault(); orbit.r=Math.min(13,Math.max(3.5,orbit.r*Math.exp(e.deltaY*0.001)));},{passive:false});
+
+/* ---------- Cutting ---------- */
+const colBuf=new Float32Array(3);
+function cutAt(hit,dt){
+  meat.worldToLocal(loc.copy(hit.point));
+  let th=Math.atan2(loc.z,loc.x); if(th<0) th+=TAU;
+  const jc=Math.round(th/TAU*NT)%NT, ic=Math.round((loc.y-Y0)/HH*(NH-1));
+  if(ic<0||ic>=NH) return;
+  cellColor(ic*NT+jc,ic,colBuf,0);
+  let vol=0;
+  for(let di=-5;di<=5;di++){
+    const i=ic+di; if(i<0||i>=NH) continue;
+    for(let dj=-3;dj<=3;dj++){
+      const j=(jc+dj+NT)%NT, c=i*NT+j;
+      const w=Math.exp(-(di*di/10+dj*dj/3.5));
+      const r=R0[c]-D[c]; if(r<=MINR) continue;
+      const inc=Math.min(r-MINR,dt*0.3*w);
+      D[c]+=inc; COOK[c]=Math.max(0.06,COOK[c]-inc*55);
+      vol+=r*inc*CELL_A*CELL_H;
+    }
+  }
+  if(vol<=0) return;
+  removed+=vol; spawnAcc+=vol; shapeDirty=true;
+  const per=0.0006;
+  while(spawnAcc>per){spawnAcc-=per; spawnShaving(hit.point,hit.normal,colBuf);}
+}
+
+/* ---------- UI ---------- */
+const typesHost=$('#types');
+for(const [k,v] of Object.entries(TYPES)){
+  const b=document.createElement('button'); b.type='button'; b.textContent=v.label; b.setAttribute('aria-pressed',String(k===typeKey));
+  b.addEventListener('click',()=>{typesHost.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); typeKey=k; setPalette(); reset();});
+  typesHost.appendChild(b);
+}
+$('#rpm').addEventListener('input',e=>{rpm=+e.target.value; $('#rpmOut').textContent=rpm.toFixed(1);});
+$('#heat').addEventListener('input',e=>{heat=+e.target.value; $('#heatOut').textContent=heat.toFixed(2);});
+$('#clear').addEventListener('click',clearTray);
+$('#reset').addEventListener('click',reset);
+$('#sound').addEventListener('click',e=>{soundOn=!soundOn; e.currentTarget.setAttribute('aria-pressed',String(soundOn)); if(soundOn) ensureAudio(); else setSizzle(0);});
+
+/* ---------- Loop ---------- */
+let last=performance.now(), frameN=0;
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  rot+=rpm/60*TAU*dt; meat.rotation.y=rot;
+  meat.updateMatrixWorld(true);
+  const rate=dt*heat*0.05;
+  if(rate>0){
+    for(let j=0;j<NT;j++){
+      const f=Math.max(0,-Math.sin(j/NT*TAU-rot)); if(f<0.02) continue;
+      const g=rate*f*(0.4+heat);
+      for(let i=0;i<NH;i++){const c=i*NT+j; const k=COOK[c]; COOK[c]=k+g*(1.15-k);}
+    }
+  }
+  const fl=0.85+0.15*Math.sin(now*0.013)*Math.sin(now*0.0047);
+  bars.forEach((m,i)=>{m.emissiveIntensity=(0.1+1.5*heat)*(fl+0.05*Math.sin(now*0.02+i));});
+  fire.intensity=3.2*heat*fl;
+  let hit=null;
+  if(pointer&&(mode===null||mode==='cut')) hit=hitMeat(pointer[0],pointer[1]);
+  stage.classList.toggle('over',!!hit&&mode!=='orbit');
+  if(hit){placeKnife(hit.point,hit.normal); if(cutting) cutAt(hit,dt);} else knife.visible=false;
+  setSizzle(cutting&&hit?0.06:0.004*heat);
+  if(shapeDirty){updateShape(); shapeDirty=false;}
+  if((colorTick++%3)===0) updateColors();
+  stepShavings(dt);
+  placeCamera(); renderer.render(scene,camera);
+  if((frameN++&7)===0){
+    const g=removed*G_PER_VOL;
+    $('#sKes').textContent=g<1000?Math.round(g)+' g':(g/1000).toFixed(2).replace('.',',')+' kg';
+    $('#sPor').textContent=Math.floor(g/100);
+    $('#sRpm').textContent=rpm.toFixed(1).replace('.',',')+' dev/dk';
+    let s=0; for(let c=0;c<NH*NT;c+=7) s+=Math.min(1,COOK[c]/0.9); $('#sPis').textContent=Math.round(s/(NH*NT/7)*100)+'%';
+    const kg=Math.max(0,(initVol-removed)*G_PER_VOL/1000);
+    $('#spec').textContent='ŞİŞ  '+kg.toFixed(1).replace('.',',')+' KG   55 CM';
+  }
+  requestAnimationFrame(frame);
+}
+
+setPalette(); resize(); reset();
+$('#loading').remove();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
